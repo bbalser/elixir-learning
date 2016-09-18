@@ -1,25 +1,15 @@
 defmodule FizzBuzz do
   def fizzbuzz(list) do
-    fizzbuzz(list, [])
+    list |> Enum.map(&(convert(&1)))
   end
 
-  def fizzbuzz([], result), do: result
-
-  def fizzbuzz([head | tail], result) when rem(head,15) == 0 do
-    fizzbuzz(tail, result ++ ["fizzbuzz"])
+  defp convert(entry) do
+    case {rem(entry, 3), rem(entry, 5)} do
+      {0, 0} -> "fizzbuzz"
+      {_, 0} -> "buzz"
+      {0, _} -> "fizz"
+      _ -> to_string(entry)
+    end
   end
-
-  def fizzbuzz([head | tail], result) when rem(head,5) == 0 do
-    fizzbuzz(tail, result ++ ["buzz"])
-  end
-
-  def fizzbuzz([head | tail], result) when rem(head,3) == 0 do
-    fizzbuzz(tail, result ++ ["fizz"])
-  end
-
-  def fizzbuzz([head | tail], result) do
-    fizzbuzz(tail, result ++ [Integer.to_string(head)])
-  end
-
 
 end

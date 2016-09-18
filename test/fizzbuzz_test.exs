@@ -9,4 +9,5 @@ defmodule FizzBuzzTest do
     assert ["buzz", "buzz", "buzz"] == fizzbuzz [5,10,20]
     assert ["fizzbuzz", "fizzbuzz"] == fizzbuzz [15,30]
   end
+
 end
