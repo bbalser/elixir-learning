@@ -1,46 +1,29 @@
 defmodule VendingMachine do
+  import StateMapMacros
 
-  defmacro set(pid, keywords) do
-    quote do
-      Agent.update(unquote(pid), fn var!(state) ->
-        Map.merge(var!(state), Enum.into(unquote(keywords), %{}))
-      end)
-    end
-  end
-
-  defmacro get(atom) do
-    quote do
-      var!(state)[unquote(atom)]
-    end
-  end
-
-  defmacro get(pid, atom) do
-    quote do
-      Agent.get(unquote(pid), fn state -> state[unquote(atom)] end)
-    end
-  end
+  @products %{:cola => 100, :chips => 50, :candy => 65}
+  @coins %{:nickel => 5, :dime => 10, :quarter => 25}
 
   def new() do
-    Agent.start_link(fn -> %{:total => 0, :return => [], :dispensed => false} end, name: __MODULE__)
+    Agent.start_link(fn -> %{:total => 0, :return => [], :message => nil } end, name: __MODULE__)
   end
 
   def display(pid) do
+    {message, total} = get pid, {:message, :total}
     cond do
-      get(pid, :dispensed) ->
-        set pid, dispensed: false
-        "THANK YOU"
-      get(pid, :total) == 0 -> "INSERT COIN"
-      true -> to_string(:io_lib.format("~.2f", [get(pid, :total) / 100]))
+      message ->
+        set pid, message: nil
+        message
+      total == 0 -> "INSERT COIN"
+      true -> to_string(:io_lib.format("~.2f", [total / 100]))
     end
   end
 
-  def insert(pid, coin) when coin in [:nickel, :dime, :quarter] do
-    set pid, total: get(:total) + value(coin)
-    pid
-  end
-
   def insert(pid, coin) do
-    set pid, return: [coin | get(:return)]
+    cond do
+      Map.has_key?(@coins, coin) -> set pid, total: state[:total] + @coins[coin]
+      true -> set pid, return: [coin | state[:return]]
+    end
     pid
   end
 
@@ -50,22 +33,19 @@ defmodule VendingMachine do
     return
   end
 
-  def dispense(pid, :cola) do
-    set pid, dispensed: true, total: get(:total) - 100
-    {:ok, :cola}
-  end
-
-  def dispense(pid, :chips) do
-    set pid, dispensed: true, total: get(:total) - 50
-    {:ok, :chips}
+  def dispense(pid, product) do
+    cond do
+      get(pid, :total) >= @products[product] ->
+        set pid, message: "THANK YOU", total: state[:total] - @products[product]
+        product
+      true ->
+        set pid, message: to_string(:io_lib.format("PRICE: ~.2f", [@products[product] / 100]))
+        nil
+    end
   end
 
   def close(pid) do
     Agent.stop pid
   end
-
-  defp value(:nickel), do: 5
-  defp value(:dime), do: 10
-  defp value(:quarter), do: 25
 
 end
