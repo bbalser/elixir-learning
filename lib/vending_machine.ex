@@ -1,5 +1,5 @@
 defmodule VendingMachine do
-  import StateMapMacros
+  import AgentStateMapMacros
 
   @products %{:cola => 100, :chips => 50, :candy => 65}
   @coins %{:nickel => 5, :dime => 10, :quarter => 25}
@@ -28,9 +28,7 @@ defmodule VendingMachine do
   end
 
   def coin_return(pid) do
-    return = get(pid, :return)
-    set pid, return: []
-    return
+    get_and_set(pid, return: []) |> elem 0
   end
 
   def dispense(pid, product) do

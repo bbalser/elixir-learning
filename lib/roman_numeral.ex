@@ -20,5 +20,4 @@ defmodule RomanNumeral do
     convert_to_arabic(String.slice(roman, String.length(to_string(cRoman))..-1), result + cArabic)
   end
 
-
 end
