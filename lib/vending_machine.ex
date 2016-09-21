@@ -1,5 +1,5 @@
 defmodule VendingMachine do
-  import AgentStateMapMacros
+  import AgentStateMap.Macros
 
   @products %{:cola => 100, :chips => 50, :candy => 65}
   @coins %{:nickel => 5, :dime => 10, :quarter => 25}
@@ -34,7 +34,11 @@ defmodule VendingMachine do
   def dispense(pid, product) do
     cond do
       get(pid, :total) >= @products[product] ->
-        set pid, message: "THANK YOU", total: state[:total] - @products[product]
+        newtotal = get(pid, :total) - @products[product]
+        Agent.update pid, fn state ->
+          newtotal = state[:total] - @products[product]
+          Map.merge(state, %{:total => newtotal, message: "THANK YOU", return: determine_change(newtotal)})
+        end
         product
       true ->
         set pid, message: to_string(:io_lib.format("PRICE: ~.2f", [@products[product] / 100]))
@@ -44,6 +48,17 @@ defmodule VendingMachine do
 
   def close(pid) do
     Agent.stop pid
+  end
+
+  defp determine_change(amount) do
+    coins = @coins |> Enum.sort(fn a,b -> elem(b, 1) < elem(a, 1) end)
+    determine_change(amount, coins, [])
+  end
+
+  defp determine_change(amount, [], result), do: result
+  defp determine_change(amount, [{coin, value} | tail], result) do
+    coins = List.duplicate(coin, div(amount, value))
+    determine_change(rem(amount,value), tail, result ++ coins)
   end
 
 end
