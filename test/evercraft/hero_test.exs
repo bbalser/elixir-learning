@@ -1,0 +1,41 @@
+defmodule Evercraft.Hero_Test do
+  use ExUnit.Case, async: true
+  alias Evercraft.Hero, as: Hero
+  alias Evercraft.Alignment, as: Alignment
+  alias Evercraft.Attack, as: Attack
+
+  test "a hero should have a name" do
+    assert "John" == Hero.create("John") |> elem(1) |> Hero.name
+  end
+
+  test "a hero has a default alignment of neutral" do
+    assert Alignment.neutral == Hero.create("x") |> elem(1) |> Hero.alignment
+  end
+
+  test "a hero can be good" do
+    assert Alignment.good == Hero.create("x", alignment: Alignment.good) |> elem(1) |> Hero.alignment
+  end
+
+  test "a hero has a default armor_class of 10" do
+    assert 10 == Hero.create("x") |> elem(1) |> Hero.armor_class
+  end
+
+  test "a hero has 5 hit points by default" do
+    assert 5 == Hero.create("x") |> elem(1) |> Hero.hit_points
+  end
+
+  test "a hero is alive while hit_points are greater than 1" do
+    {:ok, defender} = Hero.create("x")
+    for _ <- 1..4 do Attack.create(elem(Hero.create("attacker"),1), defender, 10) end
+    assert 1 == Hero.hit_points(defender)
+    assert true == Hero.alive?(defender)
+  end
+
+  test "a hero is not alive when hit_points are less than 1" do
+    {:ok, defender} = Hero.create("x")
+    for _ <- 1..5 do Attack.create(elem(Hero.create("attacker"),1), defender, 10) end
+    assert 0 == Hero.hit_points(defender)
+    assert false == Hero.alive?(defender)
+  end
+
+end
