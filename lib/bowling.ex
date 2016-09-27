@@ -1,7 +1,7 @@
 defmodule Bowling do
 
   def score(game) do
-    one = score(String.codepoints(game), [])
+    score(String.codepoints(game), [])
       |> Enum.reverse
       |> Enum.take(10)
       |> Enum.sum

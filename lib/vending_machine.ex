@@ -28,13 +28,12 @@ defmodule VendingMachine do
   end
 
   def coin_return(pid) do
-    get_and_set(pid, return: []) |> elem 0
+    get_and_set(pid, return: []) |> elem(0)
   end
 
   def dispense(pid, product) do
     cond do
       get(pid, :total) >= @products[product] ->
-        newtotal = get(pid, :total) - @products[product]
         Agent.update pid, fn state ->
           newtotal = state[:total] - @products[product]
           Map.merge(state, %{:total => newtotal, message: "THANK YOU", return: determine_change(newtotal)})
@@ -55,7 +54,7 @@ defmodule VendingMachine do
     determine_change(amount, coins, [])
   end
 
-  defp determine_change(amount, [], result), do: result
+  defp determine_change(_, [], result), do: result
   defp determine_change(amount, [{coin, value} | tail], result) do
     coins = List.duplicate(coin, div(amount, value))
     determine_change(rem(amount,value), tail, result ++ coins)

@@ -75,11 +75,11 @@ defmodule VendingMachineTest do
   test "vm should put change in coin return when more money than necessary was inserted into machine", context do
     insert_coins(context[:vm], 4, :quarter)
     assert :candy == VendingMachine.dispense context[:vm], :candy
-    assert [:quarter, :dime] == VendingMachine.coin_return context[:vm] 
+    assert [:quarter, :dime] == VendingMachine.coin_return context[:vm]
   end
 
   defp insert_coins(pid, number, coin) do
-    1..number |> Enum.each fn _ -> VendingMachine.insert(pid, coin) end
+    1..number |> Enum.each(fn _ -> VendingMachine.insert(pid, coin) end)
   end
 
 
