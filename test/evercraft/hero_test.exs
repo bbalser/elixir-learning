@@ -63,4 +63,28 @@ defmodule Evercraft.Hero_Test do
     assert 1 == Hero.hit_points(hero)
   end
 
+  test_with_params "a hero has a level computed from his experience",
+    fn exp, level ->
+      {:ok, hero} = Hero.create("name", experience: exp)
+      assert level == Hero.level(hero)
+    end do
+      [
+        {0, 1},
+        {1000, 2},
+        {2000, 3},
+        {3000, 4},
+        {4000, 5}
+      ]
+  end
+
+  test_with_params "a hero adds 5 + con modifier to hit points for each level",
+    fn exp, hp ->
+      {:ok, hero} = Hero.create("name", experience: exp, abilities: %Abilities{constitution: 12})
+      assert hp == Hero.hit_points(hero)
+    end do
+      [
+          {1000, 12},
+          {4768, 30}
+      ]
+  end
 end
