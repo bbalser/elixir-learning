@@ -1,18 +1,25 @@
+
+alias Evercraft.Alignment
+alias Evercraft.Attack
+alias Evercraft.Abilities
+alias Evercraft.Classes
+
 defmodule Evercraft.Hero do
+  require Evercraft.Classes
+  require Evercraft.Alignment
   import AgentStateMap.Macros
-  alias Evercraft.Alignment, as: Alignment
-  alias Evercraft.Attack, as: Attack
-  alias Evercraft.Abilities, as: Abilities
 
   def create(name, keywords \\ []) do
     abilities = Keyword.get(keywords, :abilities, %Abilities{})
     exp = Keyword.get(keywords, :experience, 0)
+    class = Keyword.get(keywords, :class, nil)
 
     Agent.start_link(fn -> %{ :name => name,
                               :alignment => Keyword.get(keywords, :alignment, Alignment.neutral),
-                              :hit_points => Keyword.get(keywords, :hit_points, calculate_max_hit_points(exp, abilities)),
+                              :hit_points => Keyword.get(keywords, :hit_points, calculate_max_hit_points(exp, class, abilities)),
                               :abilities => abilities,
-                              :experience => exp
+                              :experience => exp,
+                              :class => class
                             } end)
   end
 
@@ -33,12 +40,16 @@ defmodule Evercraft.Hero do
   end
 
   def max_hit_points(pid) do
-    {exp, abilities} = get pid, {:experience, :abilities}
-    calculate_max_hit_points(exp, abilities)
+    {exp, class, abilities} = get pid, {:experience, :class, :abilities}
+    calculate_max_hit_points(exp, class, abilities)
   end
 
   def level(pid) do
     calculate_level(get(pid, :experience))
+  end
+
+  def class(pid) do
+    get pid, :class
   end
 
   def alive?(pid) do
@@ -51,11 +62,17 @@ defmodule Evercraft.Hero do
     set pid, hit_points: state[:hit_points] - Attack.damage(attack)
   end
 
-  defp calculate_max_hit_points(exp, %Abilities{constitution: constitution}) do
+  defp calculate_max_hit_points(exp, class, abilities) do
     level = calculate_level(exp)
-    for _ <- (1..level), into: [] do
-      5 + Abilities.modifier(constitution)
-    end |> Enum.sum |> max(1)
+    hp_per_level = hit_points_per_level(class, abilities)
+    (level * hp_per_level) |> max(1)
+  end
+
+  defp hit_points_per_level(class, %Abilities{constitution: constitution}) do
+    cond do
+      class == Classes.fighter -> 10
+      true -> 5
+    end + Abilities.modifier(constitution)
   end
 
   defp calculate_level(exp) do
@@ -65,20 +82,27 @@ defmodule Evercraft.Hero do
 end
 
 defmodule Evercraft.Hero.Attack do
-  alias Evercraft.Hero, as: Hero
-  alias Evercraft.Abilities, as: Abilities
-  alias Evercraft.Attack, as: Attack
+  require Evercraft.Classes
+  alias Evercraft.Hero
 
   def modifier(attack) do
-    add_strength(0, attack)
+    [strength(attack), level(attack)] |> Enum.sum
   end
 
   def damage(attack) do
-    add_strength(0, attack)
+    strength(attack)
   end
 
-  defp add_strength(total, %Attack{attacker: hero}) do
-    total + (Hero.abilities(hero).strength |> Abilities.modifier)
+  defp strength(%Attack{attacker: hero}) do
+    Hero.abilities(hero).strength |> Abilities.modifier
+  end
+
+  defp level(attack) do
+    case Hero.class(attack.attacker) do
+      Classes.fighter -> Hero.level(attack.attacker)
+      _ -> div Hero.level(attack.attacker), 2
+    end
+
   end
 
 end

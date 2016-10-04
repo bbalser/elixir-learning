@@ -1,6 +1,7 @@
 defmodule Evercraft.Hero_Test do
   use ExUnit.Case, async: true
   use ExUnit.Parameterized
+  require Evercraft.Alignment
   alias Evercraft.Hero, as: Hero
   alias Evercraft.Alignment, as: Alignment
   alias Evercraft.Attack, as: Attack
@@ -87,4 +88,21 @@ defmodule Evercraft.Hero_Test do
           {4768, 30}
       ]
   end
+
+  test_with_params "a hero adds 1 to the attack modifier for every even level achieved",
+    fn exp, mod ->
+      {:ok, hero} = Hero.create("name", experience: exp)
+      {:ok, defender} = Hero.create("defender")
+      assert mod == Hero.Attack.modifier(%Attack{attacker: hero, defender: defender, roll: 10})
+    end do
+      [
+        {1000, 1},
+        {2000, 1},
+        {3000, 2},
+        {4000, 2},
+        {5000, 3},
+        {6000, 3}
+      ]
+  end
+
 end

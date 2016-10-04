@@ -9,7 +9,7 @@ defmodule EnumeratedType do
 
       for name <- list do
         funname = String.to_atom("#{name}")
-        def unquote(funname)(), do: unquote(name)
+        defmacro unquote(funname)(), do: unquote(name)
       end
     end
   end
