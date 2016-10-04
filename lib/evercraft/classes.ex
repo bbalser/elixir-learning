@@ -1,3 +1,3 @@
 defmodule Evercraft.Classes do
-  use EnumeratedType, [:fighter]
+  use EnumeratedType, [:fighter, :rogue]
 end

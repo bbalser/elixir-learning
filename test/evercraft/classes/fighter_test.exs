@@ -2,9 +2,7 @@ defmodule Evercraft.Classes.Fighter_Test do
   use ExUnit.Case, async: true
   use ExUnit.Parameterized
   require Evercraft.Classes
-  alias Evercraft.Hero
-  alias Evercraft.Classes
-  alias Evercraft.Attack
+  alias Evercraft.{Attack, Classes, Hero}
 
   test_with_params "a fighter adds 1 to attack modifier for every level",
     fn exp, mod ->

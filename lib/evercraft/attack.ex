@@ -1,5 +1,6 @@
 defmodule Evercraft.Attack do
-  alias Evercraft.Hero, as: Hero
+  require Evercraft.Classes
+  alias Evercraft.{Hero, Classes}
 
   defstruct attacker: nil, defender: nil, roll: -1
 
@@ -16,7 +17,8 @@ defmodule Evercraft.Attack do
   def defender(attack), do: attack.defender
 
   def hit?(attack) do
-    attack.roll + Hero.Attack.modifier(attack) >= Hero.armor_class(attack.defender)
+    flat_footed = if (Classes.rogue == Hero.class(attack.attacker)), do: true, else: false
+    attack.roll + Hero.Attack.modifier(attack) >= Hero.armor_class(attack.defender, flat_footed: flat_footed)
   end
 
   def damage(attack) do
@@ -25,9 +27,10 @@ defmodule Evercraft.Attack do
   end
 
   defp damage_multiplier(attack) do
-    case critical?(attack) do
-      true -> 2
-      false -> 1
+    case {critical?(attack), Hero.class(attack.attacker)}  do
+      {true, Classes.rogue} -> 3
+      {true, _} -> 2
+      {false, _} -> 1
     end
   end
 

@@ -1,12 +1,8 @@
 
-alias Evercraft.Alignment
-alias Evercraft.Attack
-alias Evercraft.Abilities
-alias Evercraft.Classes
+alias Evercraft.{Abilities, Alignment, Attack, Classes}
 
 defmodule Evercraft.Hero do
-  require Evercraft.Classes
-  require Evercraft.Alignment
+  require Evercraft.{Alignment, Classes}
   import AgentStateMap.Macros
 
   def create(name, keywords \\ []) do
@@ -31,8 +27,12 @@ defmodule Evercraft.Hero do
     get pid, :alignment
   end
 
-  def armor_class(pid) do
-    10 + Abilities.modifier(get(pid, :abilities).dexterity)
+  def armor_class(pid, opts \\ []) do
+    dexterity_mod = Abilities.modifier(get(pid, :abilities).dexterity)
+    10 + case Keyword.get(opts, :flat_footed, false) do
+      false -> dexterity_mod
+      true -> min(dexterity_mod, 0)
+    end
   end
 
   def hit_points(pid) do

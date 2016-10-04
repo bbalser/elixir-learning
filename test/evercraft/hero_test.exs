@@ -2,10 +2,7 @@ defmodule Evercraft.Hero_Test do
   use ExUnit.Case, async: true
   use ExUnit.Parameterized
   require Evercraft.Alignment
-  alias Evercraft.Hero, as: Hero
-  alias Evercraft.Alignment, as: Alignment
-  alias Evercraft.Attack, as: Attack
-  alias Evercraft.Abilities, as: Abilities
+  alias Evercraft.{Hero, Abilities, Alignment, Attack}
 
   test "a hero should have a name" do
     assert "John" == Hero.create("John") |> elem(1) |> Hero.name
@@ -21,6 +18,14 @@ defmodule Evercraft.Hero_Test do
 
   test "a hero has a default armor_class of 10" do
     assert 10 == Hero.create("x") |> elem(1) |> Hero.armor_class
+  end
+
+  test "a hero does not add dexterity modifier to armor class when flat footed" do
+    assert 10 == Hero.create("x", abilities: %Abilities{dexterity: 12}) |> elem(1) |>  Hero.armor_class(flat_footed: true)
+  end
+
+  test "a hero still adds dexterity modifier to armor class if flat footed when mod is negative" do
+    assert 9 == Hero.create("x", abilities: %Abilities{dexterity: 8}) |> elem(1) |> Hero.armor_class(flat_footed: true)
   end
 
   test "a hero has 5 hit points by default" do
