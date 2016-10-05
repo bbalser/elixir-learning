@@ -18,7 +18,7 @@ defmodule Evercraft.Attack do
 
   def hit?(attack) do
     flat_footed = if (Classes.rogue == Hero.class(attack.attacker)), do: true, else: false
-    attack.roll + Hero.Attack.modifier(attack) >= Hero.armor_class(attack.defender, flat_footed: flat_footed)
+    attack.roll + Classes.attack_modifier(attack) >= Hero.armor_class(attack.defender, flat_footed: flat_footed)
   end
 
   def damage(attack) do

@@ -6,7 +6,7 @@ defmodule Rogue_Test do
 
   describe "a rogue" do
     setup do
-      {:ok, rogue} = Hero.create("rogue", class: Classes.rogue)
+      {:ok, rogue} = Hero.create("rogue", class: Classes.rogue, abilities: %Abilities{dexterity: 12})
       {:ok, defender} = Hero.create("defender", abilities: %Abilities{dexterity: 12})
       {:ok, rogue: rogue, defender: defender}
     end
@@ -18,6 +18,10 @@ defmodule Rogue_Test do
 
     test "consideres defender flat footed for all attacks", c do
       assert true == Attack.create(c[:rogue], c[:defender], 10) |> Attack.hit?
+    end
+
+    test "adds dexterity modifier to attack modifier instead of strength", c do
+      assert 1 == Hero.Attack.modifier(Attack.create(c[:rogue], c[:defender], 10))
     end
 
   end

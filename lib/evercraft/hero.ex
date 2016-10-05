@@ -86,23 +86,30 @@ defmodule Evercraft.Hero.Attack do
   alias Evercraft.Hero
 
   def modifier(attack) do
-    [strength(attack), level(attack)] |> Enum.sum
+    [attacker_modifier(attack, determine_attacker_ability(attack)), level(attack)] |> Enum.sum
   end
 
   def damage(attack) do
-    strength(attack)
+    attacker_modifier(attack, :strength)
   end
 
-  defp strength(%Attack{attacker: hero}) do
-    Hero.abilities(hero).strength |> Abilities.modifier
+  defp attacker_modifier(%Attack{attacker: attacker}, modifier) do
+    Hero.abilities(attacker) |> Map.get(modifier) |> Abilities.modifier
   end
 
-  defp level(attack) do
-    case Hero.class(attack.attacker) do
-      Classes.fighter -> Hero.level(attack.attacker)
-      _ -> div Hero.level(attack.attacker), 2
+  defp determine_attacker_ability(%Attack{attacker: attacker}) do
+    case Hero.class(attacker) do
+      :rogue -> :dexterity
+      _ -> :strength
     end
+  end
 
+  defp level(%Attack{attacker: attacker}) do
+    level = Hero.level(attacker)
+    case Hero.class(attacker) do
+      Classes.fighter -> level
+      _ -> div level, 2
+    end
   end
 
 end
