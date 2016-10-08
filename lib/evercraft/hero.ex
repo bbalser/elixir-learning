@@ -1,8 +1,8 @@
 
-alias Evercraft.{Abilities, Alignment, Attack, Classes}
+alias Evercraft.{Abilities, Alignment, Attack}
 
 defmodule Evercraft.Hero do
-  require Evercraft.{Alignment, Classes}
+  require Evercraft.Alignment
   import AgentStateMap.Macros
 
   def create(name, keywords \\ []) do
@@ -70,7 +70,7 @@ defmodule Evercraft.Hero do
 
   defp hit_points_per_level(class, %Abilities{constitution: constitution}) do
     cond do
-      class == Classes.fighter -> 10
+      class == :fighter -> 10
       true -> 5
     end + Abilities.modifier(constitution)
   end
@@ -82,7 +82,6 @@ defmodule Evercraft.Hero do
 end
 
 defmodule Evercraft.Hero.Attack do
-  require Evercraft.Classes
   alias Evercraft.Hero
 
   def modifier(attack) do
@@ -107,7 +106,7 @@ defmodule Evercraft.Hero.Attack do
   defp level(%Attack{attacker: attacker}) do
     level = Hero.level(attacker)
     case Hero.class(attacker) do
-      Classes.fighter -> level
+      :fighter -> level
       _ -> div level, 2
     end
   end

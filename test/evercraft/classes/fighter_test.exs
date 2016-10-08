@@ -1,12 +1,11 @@
 defmodule Evercraft.Classes.Fighter_Test do
   use ExUnit.Case, async: true
   use ExUnit.Parameterized
-  require Evercraft.Classes
-  alias Evercraft.{Attack, Classes, Hero}
+  alias Evercraft.{Attack, Hero}
 
   test_with_params "a fighter adds 1 to attack modifier for every level",
     fn exp, mod ->
-      {:ok, fighter} = Hero.create("Fred", class: Classes.fighter, experience: exp)
+      {:ok, fighter} = Hero.create("Fred", class: :fighter, experience: exp)
       {:ok, defender} = Hero.create("defender")
       assert mod == Hero.Attack.modifier(%Attack{attacker: fighter, defender: defender, roll: 10})
     end do
@@ -22,7 +21,7 @@ defmodule Evercraft.Classes.Fighter_Test do
 
   test_with_params "a fighter gains 10 hit points per level",
     fn exp, hp ->
-      {:ok, fighter} = Hero.create("fighter", experience: exp, class: Classes.fighter)
+      {:ok, fighter} = Hero.create("fighter", experience: exp, class: :fighter)
       assert hp == Hero.hit_points(fighter)
     end do
       for x <- (1..20), into: [] do

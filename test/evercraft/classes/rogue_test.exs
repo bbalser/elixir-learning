@@ -1,12 +1,11 @@
 defmodule Rogue_Test do
   use ExUnit.Case, async: true
   use ExUnit.Parameterized
-  require Evercraft.Classes
-  alias Evercraft.{Hero, Classes, Attack, Abilities}
+  alias Evercraft.{Hero, Attack, Abilities}
 
   describe "a rogue" do
     setup do
-      {:ok, rogue} = Hero.create("rogue", class: Classes.rogue, abilities: %Abilities{dexterity: 12})
+      {:ok, rogue} = Hero.create("rogue", class: :rogue, abilities: %Abilities{dexterity: 12})
       {:ok, defender} = Hero.create("defender", abilities: %Abilities{dexterity: 12})
       {:ok, rogue: rogue, defender: defender}
     end
