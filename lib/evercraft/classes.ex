@@ -3,6 +3,9 @@ alias Evercraft.{Hero, Abilities, Attack}
 defmodule Evercraft.Class do
 
   @callback attack_bonus(%Attack{}) :: integer
+  @callback damage_bonus(%Attack{}) :: integer
+  @callback critical_multiplier(%Attack{}) :: integer
+  @callback hit_points_per_level() :: integer
   @callback identifier() :: atom
 
   defmacro __using__(_) do
@@ -14,20 +17,12 @@ defmodule Evercraft.Class do
         GenServer.start_link(__MODULE__, [], name: __MODULE__)
       end
 
-      def handle_call({:hit_points_per_level, class}, _from, state) do
-        hp_per_level = cond do
-          class == identifier() -> {:ok, hit_points_per_level}
-          true -> {:notapplicable, 0}
-        end
-        {:reply, hp_per_level, state}
+      def handle_call({method, %Attack{attacker: attacker} = attack}, _from, state) do
+        {:reply, apply(__MODULE__, method, [attack]), state}
       end
 
-      def handle_call({method, %Attack{attacker: attacker} = attack}, _from, state) do
-        bonus = cond do
-          Hero.class(attacker) == identifier() -> {:ok, apply(__MODULE__, method, [attack])}
-          true -> {:notapplicable, 0}
-        end
-        {:reply, bonus, state}
+      def handle_call(method, _from, state) do
+        {:reply, apply(__MODULE__, method, []), state}
       end
 
       def attack_bonus(%Attack{} = attack) do
@@ -119,41 +114,41 @@ end
 
 defmodule Evercraft.Class.Supervisor do
   use Supervisor
-  @children [Evercraft.Class.NoClass, Evercraft.Class.Fighter, Evercraft.Class.Rogue, Evercraft.Class.Monk]
+  @children %{noclass: Evercraft.Class.NoClass,
+              fighter: Evercraft.Class.Fighter,
+              rogue: Evercraft.Class.Rogue,
+              monk: Evercraft.Class.Monk}
 
   def start_link() do
     Supervisor.start_link(__MODULE__, [], name: __MODULE__)
   end
 
   def init([]) do
-    children = @children |> Enum.map(fn child -> worker(child, []) end)
-
+    children = @children |> Enum.map(fn {_name, child} -> worker(child, []) end)
     supervise(children, strategy: :one_for_one)
   end
 
-  def attack_bonus(%Attack{} = attack) do
-    call_all({:attack_bonus, attack})
+  def attack_bonus(%Attack{attacker: attacker} = attack) do
+    Hero.class(attacker) |> GenServer.call({:attack_bonus, attack})
   end
 
-  def damage_bonus(%Attack{} = attack) do
-    call_all({:damage_bonus, attack})
+  def damage_bonus(%Attack{attacker: attacker} = attack) do
+    Hero.class(attacker) |> GenServer.call({:damage_bonus, attack})
   end
 
   def hit_points_per_level(class) do
-    call_all({:hit_points_per_level, class})
+    GenServer.call(class, :hit_points_per_level)
   end
 
-  def critical_multiplier(%Attack{} = attack) do
-    call_all({:critical_multiplier, attack})
+  def critical_multiplier(%Attack{attacker: attacker} = attack) do
+    Hero.class(attacker) |> GenServer.call({:critical_multiplier, attack})
   end
 
-  defp call_all(message) do
-    @children
-      |> Enum.map(&Task.async(fn -> GenServer.call(&1, message) end))
-      |> Enum.map(&Task.await/1)
-      |> Enum.filter(fn {result, _} -> result == :ok end)
-      |> Enum.map(fn {:ok, value} -> value end)
-      |> Enum.sum
+  def ref(class_atom) when is_atom(class_atom) do
+    case class_atom do
+      nil -> @children[:noclass]
+      _ -> @children[class_atom]
+    end
   end
 
 end

@@ -8,7 +8,7 @@ defmodule Evercraft.Hero do
   def create(name, keywords \\ []) do
     abilities = Keyword.get(keywords, :abilities, %Abilities{})
     exp = Keyword.get(keywords, :experience, 0)
-    class = Keyword.get(keywords, :class, nil)
+    class = Keyword.get(keywords, :class, nil) |> Class.Supervisor.ref
 
     Agent.start_link(fn -> %{ :name => name,
                               :alignment => Keyword.get(keywords, :alignment, Alignment.neutral),
