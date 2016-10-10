@@ -7,7 +7,7 @@ defmodule Evercraft.Classes.Fighter_Test do
     fn exp, mod ->
       {:ok, fighter} = Hero.create("Fred", class: :fighter, experience: exp)
       {:ok, defender} = Hero.create("defender")
-      assert mod == Hero.Attack.modifier(%Attack{attacker: fighter, defender: defender, roll: 10})
+      assert mod == Evercraft.Class.Supervisor.attack_bonus(%Attack{attacker: fighter, defender: defender, roll: 10})
     end do
       [
         {0, 1},

@@ -1,5 +1,5 @@
 
-alias Evercraft.{Abilities, Alignment, Attack}
+alias Evercraft.{Abilities, Alignment, Attack, Class}
 
 defmodule Evercraft.Hero do
   require Evercraft.Alignment
@@ -64,51 +64,12 @@ defmodule Evercraft.Hero do
 
   defp calculate_max_hit_points(exp, class, abilities) do
     level = calculate_level(exp)
-    hp_per_level = hit_points_per_level(class, abilities)
+    hp_per_level = Class.Supervisor.hit_points_per_level(class) + Abilities.modifier(abilities.constitution)
     (level * hp_per_level) |> max(1)
-  end
-
-  defp hit_points_per_level(class, %Abilities{constitution: constitution}) do
-    cond do
-      class == :fighter -> 10
-      true -> 5
-    end + Abilities.modifier(constitution)
   end
 
   defp calculate_level(exp) do
     div(exp, 1000) + 1
-  end
-
-end
-
-defmodule Evercraft.Hero.Attack do
-  alias Evercraft.Hero
-
-  def modifier(attack) do
-    [attacker_modifier(attack, determine_attacker_ability(attack)), level(attack)] |> Enum.sum
-  end
-
-  def damage(attack) do
-    attacker_modifier(attack, :strength)
-  end
-
-  defp attacker_modifier(%Attack{attacker: attacker}, modifier) do
-    Hero.abilities(attacker) |> Map.get(modifier) |> Abilities.modifier
-  end
-
-  defp determine_attacker_ability(%Attack{attacker: attacker}) do
-    case Hero.class(attacker) do
-      :rogue -> :dexterity
-      _ -> :strength
-    end
-  end
-
-  defp level(%Attack{attacker: attacker}) do
-    level = Hero.level(attacker)
-    case Hero.class(attacker) do
-      :fighter -> level
-      _ -> div level, 2
-    end
   end
 
 end

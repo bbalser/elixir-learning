@@ -14,16 +14,28 @@ defmodule Evercraft.Class do
         GenServer.start_link(__MODULE__, [], name: __MODULE__)
       end
 
-      def handle_call({:attack_bonus, %Attack{attacker: attacker} = attack}, _from, state) do
+      def handle_call({:hit_points_per_level, class}, _from, state) do
+        hp_per_level = cond do
+          class == identifier() -> {:ok, hit_points_per_level}
+          true -> {:notapplicable, 0}
+        end
+        {:reply, hp_per_level, state}
+      end
+
+      def handle_call({method, %Attack{attacker: attacker} = attack}, _from, state) do
         bonus = cond do
-          Hero.class(attacker) == identifier() -> attack_bonus(attack)
-          true -> 0
+          Hero.class(attacker) == identifier() -> {:ok, apply(__MODULE__, method, [attack])}
+          true -> {:notapplicable, 0}
         end
         {:reply, bonus, state}
       end
 
       def attack_bonus(%Attack{} = attack) do
         attack_bonus_from_abilities(attack) + attack_bonus_from_level(attack)
+      end
+
+      def damage_bonus(%Attack{} = attack) do
+        damage_bonus_from_abilities(attack)
       end
 
       defp attack_bonus_from_abilities(%Attack{attacker: attacker}) do
@@ -34,9 +46,20 @@ defmodule Evercraft.Class do
         div Hero.level(attacker), 2
       end
 
+      defp damage_bonus_from_abilities(%Attack{attacker: attacker}) do
+        Hero.abilities(attacker).strength |> Abilities.modifier
+      end
+
+      def hit_points_per_level do
+        5
+      end
+
       defoverridable [attack_bonus: 1,
                       attack_bonus_from_abilities: 1,
-                      attack_bonus_from_level: 1]
+                      attack_bonus_from_level: 1,
+                      damage_bonus: 1,
+                      damage_bonus_from_abilities: 1,
+                      hit_points_per_level: 0]
     end
   end
 end
@@ -55,6 +78,10 @@ defmodule Evercraft.Class.Fighter do
 
   defp attack_bonus_from_level(%Attack{attacker: attacker}) do
     Hero.level(attacker)
+  end
+
+  def hit_points_per_level do
+    10
   end
 
 end
@@ -85,9 +112,23 @@ defmodule Evercraft.Class.Supervisor do
   end
 
   def attack_bonus(%Attack{} = attack) do
+    call_all({:attack_bonus, attack})
+  end
+
+  def damage_bonus(%Attack{} = attack) do
+    call_all({:damage_bonus, attack})
+  end
+
+  def hit_points_per_level(class) do
+    call_all({:hit_points_per_level, class})
+  end
+
+  defp call_all(message) do
     @children
-      |> Enum.map(fn proc -> Task.async(fn -> GenServer.call(proc, {:attack_bonus, attack}) end) end)
-      |> Enum.map(fn task -> Task.await(task) end)
+      |> Enum.map(&Task.async(fn -> GenServer.call(&1, message) end))
+      |> Enum.map(&Task.await/1)
+      |> Enum.filter(fn {result, _} -> result == :ok end)
+      |> Enum.map(fn {:ok, value} -> value end)
       |> Enum.sum
   end
 

@@ -20,7 +20,7 @@ defmodule Rogue_Test do
     end
 
     test "adds dexterity modifier to attack modifier instead of strength", c do
-      assert 1 == Hero.Attack.modifier(Attack.create(c[:rogue], c[:defender], 10))
+      assert 1 == Evercraft.Class.Supervisor.attack_bonus(Attack.create(c[:rogue], c[:defender], 10))
     end
 
   end

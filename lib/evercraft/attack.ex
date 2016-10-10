@@ -21,7 +21,7 @@ defmodule Evercraft.Attack do
   end
 
   def damage(attack) do
-    damage_multiplier(attack) * (1 + Hero.Attack.damage(attack))
+    damage_multiplier(attack) * (1 + Class.Supervisor.damage_bonus(attack))
       |> max(1)
   end
 

@@ -94,11 +94,11 @@ defmodule Evercraft.Hero_Test do
       ]
   end
 
-  test_with_params "a hero adds 1 to the attack modifier for every even level achieved",
+  test_with_params "a hero adds 1 to the attack bonus for every even level achieved",
     fn exp, mod ->
       {:ok, hero} = Hero.create("name", experience: exp)
       {:ok, defender} = Hero.create("defender")
-      assert mod == Hero.Attack.modifier(%Attack{attacker: hero, defender: defender, roll: 10})
+      assert mod == Evercraft.Class.Supervisor.attack_bonus(%Attack{attacker: hero, defender: defender, roll: 10})
     end do
       [
         {1000, 1},
