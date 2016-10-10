@@ -38,6 +38,10 @@ defmodule Evercraft.Class do
         damage_bonus_from_abilities(attack)
       end
 
+      def critical_multiplier(%Attack{} = attack) do
+        2
+      end
+
       defp attack_bonus_from_abilities(%Attack{attacker: attacker}) do
         Hero.abilities(attacker).strength |> Abilities.modifier
       end
@@ -59,7 +63,8 @@ defmodule Evercraft.Class do
                       attack_bonus_from_level: 1,
                       damage_bonus: 1,
                       damage_bonus_from_abilities: 1,
-                      hit_points_per_level: 0]
+                      hit_points_per_level: 0,
+                      critical_multiplier: 1]
     end
   end
 end
@@ -95,11 +100,26 @@ defmodule Evercraft.Class.Rogue do
       Hero.abilities(attacker).dexterity |> Abilities.modifier
   end
 
+  def critical_multiplier(%Attack{} = _attack) do
+    3
+  end
+
+end
+
+defmodule Evercraft.Class.Monk do
+  use Evercraft.Class
+
+  def identifier, do: :monk
+
+  def hit_points_per_level do
+    6
+  end
+
 end
 
 defmodule Evercraft.Class.Supervisor do
   use Supervisor
-  @children [Evercraft.Class.NoClass, Evercraft.Class.Fighter, Evercraft.Class.Rogue]
+  @children [Evercraft.Class.NoClass, Evercraft.Class.Fighter, Evercraft.Class.Rogue, Evercraft.Class.Monk]
 
   def start_link() do
     Supervisor.start_link(__MODULE__, [], name: __MODULE__)
@@ -121,6 +141,10 @@ defmodule Evercraft.Class.Supervisor do
 
   def hit_points_per_level(class) do
     call_all({:hit_points_per_level, class})
+  end
+
+  def critical_multiplier(%Attack{} = attack) do
+    call_all({:critical_multiplier, attack})
   end
 
   defp call_all(message) do

@@ -1,4 +1,4 @@
-defmodule Rogue_Test do
+defmodule Evercraft.Class.Rogue_Test do
   use ExUnit.Case, async: true
   use ExUnit.Parameterized
   alias Evercraft.{Hero, Attack, Abilities}

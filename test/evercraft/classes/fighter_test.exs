@@ -1,4 +1,4 @@
-defmodule Evercraft.Classes.Fighter_Test do
+defmodule Evercraft.Class.Fighter_Test do
   use ExUnit.Case, async: true
   use ExUnit.Parameterized
   alias Evercraft.{Attack, Hero}

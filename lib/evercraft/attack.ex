@@ -26,10 +26,9 @@ defmodule Evercraft.Attack do
   end
 
   defp damage_multiplier(attack) do
-    case {critical?(attack), Hero.class(attack.attacker)}  do
-      {true, :rogue} -> 3
-      {true, _} -> 2
-      {false, _} -> 1
+    case critical?(attack)  do
+      true -> Class.Supervisor.critical_multiplier(attack)
+      false -> 1
     end
   end
 
