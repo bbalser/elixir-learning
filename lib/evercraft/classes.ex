@@ -30,7 +30,7 @@ defmodule Evercraft.Class do
       end
 
       def damage_bonus(%Attack{} = attack) do
-        damage_bonus_from_abilities(attack)
+        base_damage + damage_bonus_from_abilities(attack)
       end
 
       def critical_multiplier(%Attack{} = attack) do
@@ -49,15 +49,16 @@ defmodule Evercraft.Class do
         Hero.abilities(attacker).strength |> Abilities.modifier
       end
 
-      def hit_points_per_level do
-        5
-      end
+      defp base_damage(), do: 1
+
+      def hit_points_per_level(), do: 5
 
       defoverridable [attack_bonus: 1,
                       attack_bonus_from_abilities: 1,
                       attack_bonus_from_level: 1,
                       damage_bonus: 1,
                       damage_bonus_from_abilities: 1,
+                      base_damage: 0,
                       hit_points_per_level: 0,
                       critical_multiplier: 1]
     end
@@ -109,6 +110,8 @@ defmodule Evercraft.Class.Monk do
   def hit_points_per_level do
     6
   end
+
+  defp base_damage, do: 3
 
 end
 

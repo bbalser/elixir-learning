@@ -73,7 +73,7 @@ defmodule Evercraft.Attack_Test do
     test "has a minimum damage of 1 regardless of strength modifier" do
       {:ok, attacker} = Hero.create("attacker", abilities: %Abilities{strength: 5})
       {:ok, defender} = Hero.create("defender")
-      assert -3 == Evercraft.Class.Supervisor.damage_bonus(%Attack{attacker: attacker, defender: defender, roll: 20})
+      assert 0 > Evercraft.Class.Supervisor.damage_bonus(%Attack{attacker: attacker, defender: defender, roll: 20})
       assert 1 == Attack.create(attacker, defender, 20)
                   |> Attack.damage
     end
