@@ -3,7 +3,7 @@ defmodule Bowling do
   def score(game) do
     score(String.codepoints(game), [])
       |> Enum.reverse
-      |> Enum.take(10)
+      |> Stream.take(10)
       |> Enum.sum
   end
 

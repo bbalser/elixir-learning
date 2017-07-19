@@ -30,7 +30,7 @@ defmodule Evercraft.Class do
       end
 
       def damage_bonus(%Attack{} = attack) do
-        base_damage + damage_bonus_from_abilities(attack)
+        base_damage() + damage_bonus_from_abilities(attack)
       end
 
       def critical_multiplier(%Attack{} = attack) do

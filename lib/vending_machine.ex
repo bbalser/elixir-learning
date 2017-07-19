@@ -1,48 +1,59 @@
 defmodule VendingMachine do
-  import AgentStateMap.Macros
+  alias VendingMachine.State
 
   @products %{:cola => 100, :chips => 50, :candy => 65}
   @coins %{:nickel => 5, :dime => 10, :quarter => 25}
 
   def new() do
-    Agent.start_link(fn -> %{:total => 0, :return => [], :message => nil } end, name: __MODULE__)
+    Agent.start_link(fn -> %State{} end)
   end
 
   def display(pid) do
-    {message, total} = get pid, {:message, :total}
-    cond do
-      message ->
-        set pid, message: nil
-        message
-      total == 0 -> "INSERT COIN"
-      true -> to_string(:io_lib.format("~.2f", [total / 100]))
-    end
+    Agent.get_and_update(pid, fn state ->
+      cond do
+        state.message -> { state.message, %State{ state | message: nil } }
+        state.total == 0 -> { "INSERT COIN", state }
+        true -> { to_string(:io_lib.format("~.2f", [state.total / 100])), state }
+      end
+    end)
   end
 
   def insert(pid, coin) do
-    cond do
-      Map.has_key?(@coins, coin) -> set pid, total: state[:total] + @coins[coin]
-      true -> set pid, return: [coin | state[:return]]
-    end
+    Agent.update(pid, fn state ->
+      attempt_to_insert_coin(state, coin, Map.has_key?(@coins, coin))
+    end)
     pid
   end
 
+  defp attempt_to_insert_coin(state, coin, _valid_coin = true) do
+    %State{ state | total: state.total + @coins[coin] }
+  end
+
+  defp attempt_to_insert_coin(state, coin, _not_valid) do
+    %State{ state | return: [coin | state.return] }
+  end
+
   def coin_return(pid) do
-    get_and_set(pid, return: []) |> elem(0)
+    Agent.get_and_update(pid, fn state ->
+      { state.return, %State{ state | return: [] } }
+    end)
   end
 
   def dispense(pid, product) do
-    cond do
-      get(pid, :total) >= @products[product] ->
-        Agent.update pid, fn state ->
-          newtotal = state[:total] - @products[product]
-          Map.merge(state, %{:total => newtotal, message: "THANK YOU", return: determine_change(newtotal)})
-        end
-        product
-      true ->
-        set pid, message: to_string(:io_lib.format("PRICE: ~.2f", [@products[product] / 100]))
-        nil
-    end
+    Agent.get_and_update(pid, fn state ->
+      attempt_dispense(state, @products[product], product)
+   end)
+  end
+
+  defp attempt_dispense(state = %State{ total: total}, cost, product) when total >= cost do
+    new_total = total - cost
+    { product, %State{ state | total: new_total, 
+                               message: "THANK YOU", 
+                               return: determine_change(new_total) } }
+  end
+
+  defp attempt_dispense(state, cost, _product) do
+    { nil, %State{ state | message: to_string(:io_lib.format("PRICE: ~.2f", [cost / 100])) } }
   end
 
   def close(pid) do

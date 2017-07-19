@@ -16,7 +16,9 @@ defmodule RomanNumeral do
 
   defp convert_to_arabic("", result), do: result
   defp convert_to_arabic(roman, result) do
-    {cRoman, cArabic} = @conversion_values |> Enum.find(fn {cRoman, _} -> String.starts_with?(roman, to_string(cRoman)) end)
+    {cRoman, cArabic} = @conversion_values
+                        |> Enum.find(fn {cRoman, _} -> String.starts_with?(roman, to_string(cRoman)) end)
+    
     convert_to_arabic(String.slice(roman, String.length(to_string(cRoman))..-1), result + cArabic)
   end
 
